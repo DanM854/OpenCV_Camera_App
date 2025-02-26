@@ -5,7 +5,59 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- TextViewStatus-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="16dp">
+
+        <!-- Start Preview Button -->
+        <Button
+            android:id="@+id/buttonStartPreview"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Start"
+            android:layout_marginEnd="8dp" />
+
+        <!-- Stop Preview Button -->
+        <Button
+            android:id="@+id/buttonStopPreview"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Stop"
+            android:layout_marginStart="8dp"/>
+    </LinearLayout>
+
+    <!-- Checkbox to enable processing -->
+    <CheckBox
+        android:id="@+id/checkboxEnableProcessing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enable processing"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"/>
+
+    <org.opencv.android.JavaCameraView
+        android:id="@+id/cameraView"
+        android:layout_width="1px"
+        android:layout_height="1px"
+        android:layout_weight="0"
+        android:visibility="visible" />
+
+    <!-- ImageView for displaying images -->
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:contentDescription="Image View"
+        android:scaleType="centerCrop"
+        android:layout_margin="16dp" />
+
+    <!-- TextViewStatus -->
     <TextView
         android:id="@+id/textViewStatus"
         android:layout_width="wrap_content"
