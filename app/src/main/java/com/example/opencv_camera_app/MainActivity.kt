@@ -15,15 +15,20 @@ import android.widget.CheckBox
 import android.widget.ImageView
 import org.opencv.core.CvType
 import org.opencv.core.Mat
+import android.graphics.Bitmap
+import org.opencv.android.Utils
+import org.opencv.imgproc.Imgproc
 
 
 
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2 {
     private lateinit var buttonStartPreview: Button
     private lateinit var buttonStopPreview: Button
-    private lateinit var checkBoxProcessing: Button
+    private lateinit var checkBoxProcessing: CheckBox
     private lateinit var imageView: ImageView
     private lateinit var openCvCameraView: CameraBridgeViewBase
+    private lateinit var inputMat: Mat
+    private lateinit var processedMat: Mat
 
     private var isPreviewActive = false
     private lateinit var textViewStatus: TextView
@@ -92,17 +97,44 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     override fun onCameraViewStarted(width: Int, height: Int) {
         isPreviewActive = true
 
+        inputMat = Mat(height, width, CvType.CV_8UC4)
+        processedMat = Mat(height, width, CvType.CV_8UC1)
+
         updateControls()
     }
 
     override fun onCameraViewStopped() {
         isPreviewActive = false
 
+        inputMat.release()
+        processedMat.release()
+
         updateControls()
     }
 
     override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
-        return inputFrame!!.rgba()
+        inputFrame!!.rgba().copyTo(inputMat)
+
+        var matToDisplay = inputMat
+        if(checkBoxProcessing.isChecked){
+            Imgproc.cvtColor(inputMat, processedMat, Imgproc.COLOR_RGBA2GRAY)
+            Imgproc.adaptiveThreshold(
+                processedMat, processedMat, 255.0,
+                Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
+                Imgproc.THRESH_BINARY, 21, 0.0
+            )
+
+            matToDisplay = processedMat
+        }
+
+        val bitmapToDisplay = Bitmap.createBitmap(matToDisplay.cols(), matToDisplay.rows(), Bitmap.Config.ARGB_8888 )
+        Utils.matToBitmap(matToDisplay, bitmapToDisplay)
+
+        runOnUiThread {
+            imageView.setImageBitmap(bitmapToDisplay)
+        }
+
+        return inputMat
 
     }
 }
