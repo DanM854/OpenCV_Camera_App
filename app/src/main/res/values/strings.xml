@@ -7,5 +7,7 @@
         <item>Original</item>
         <item>Umbral Adaptativo</item>
         <item>Negativo</item>
+        <item>Rojo</item>
+        <item>Deteccion</item>
     </string-array>
 </resources>
