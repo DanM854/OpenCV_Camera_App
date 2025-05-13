@@ -15,9 +15,14 @@ import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import org.opencv.android.CameraBridgeViewBase
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.ImageView
+import android.widget.Spinner
+import org.opencv.core.Core
 import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.android.Utils
@@ -33,6 +38,12 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     private lateinit var openCvCameraView: CameraBridgeViewBase
     private lateinit var inputMat: Mat
     private lateinit var processedMat: Mat
+    private lateinit var spinnerFilters: Spinner
+
+    private val FILTER_ORIGINAL = 0
+    private val FILTER_ADAPTIVE_THRESHOLD = 1
+    private val FILTER_NEGATIVE = 2
+    private var currentFilter = FILTER_ORIGINAL
 
     private var isPreviewActive = false
     private lateinit var textViewStatus: TextView
@@ -55,6 +66,29 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         checkBoxProcessing = findViewById(R.id.checkboxEnableProcessing)
         imageView = findViewById(R.id.imageView)
         openCvCameraView = findViewById(R.id.cameraView)
+        spinnerFilters = findViewById(R.id.spinnerFilters)
+
+        // Configura el adaptador para el Spinner
+        ArrayAdapter.createFromResource(
+            this,
+            R.array.filter_options,
+            android.R.layout.simple_spinner_item
+        ).also { adapter ->
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            spinnerFilters.adapter = adapter
+        }
+
+        // Configura el listener para el Spinner
+        spinnerFilters.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                currentFilter = position
+                applyProcessingToCurrentImage()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                // No hacer nada
+            }
+        }
 
         isOpenCvInitialized = OpenCVLoader.initLocal()
 
@@ -155,12 +189,23 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     private fun applyFilterToBitmap(mat: Mat): Bitmap {
         val processedMat = Mat()
 
-        Imgproc.cvtColor(mat, processedMat, Imgproc.COLOR_RGBA2GRAY)
-        Imgproc.adaptiveThreshold(
-            processedMat, processedMat, 255.0,
-            Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-            Imgproc.THRESH_BINARY, 21, 0.0
-        )
+        when (currentFilter) {
+            FILTER_ORIGINAL -> {
+                mat.copyTo(processedMat)
+            }
+            FILTER_ADAPTIVE_THRESHOLD -> {
+                Imgproc.cvtColor(mat, processedMat, Imgproc.COLOR_RGBA2GRAY)
+                Imgproc.adaptiveThreshold(
+                    processedMat, processedMat, 255.0,
+                    Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
+                    Imgproc.THRESH_BINARY, 21, 0.0
+                )
+            }
+            FILTER_NEGATIVE -> {
+                mat.copyTo(processedMat)
+                Core.bitwise_not(processedMat, processedMat)
+            }
+        }
 
         val filteredBitmap = Bitmap.createBitmap(
             processedMat.cols(), processedMat.rows(), Bitmap.Config.ARGB_8888
@@ -216,12 +261,25 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     private fun applyFilterToMat(inputMat: Mat): Mat {
         val processedMat = Mat()
-        Imgproc.cvtColor(inputMat, processedMat, Imgproc.COLOR_RGBA2GRAY)
-        Imgproc.adaptiveThreshold(
-            processedMat, processedMat, 255.0,
-            Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-            Imgproc.THRESH_BINARY, 21, 0.0
-        )
+
+        when (currentFilter) {
+            FILTER_ORIGINAL -> {
+                inputMat.copyTo(processedMat)
+            }
+            FILTER_ADAPTIVE_THRESHOLD -> {
+                Imgproc.cvtColor(inputMat, processedMat, Imgproc.COLOR_RGBA2GRAY)
+                Imgproc.adaptiveThreshold(
+                    processedMat, processedMat, 255.0,
+                    Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
+                    Imgproc.THRESH_BINARY, 21, 0.0
+                )
+            }
+            FILTER_NEGATIVE -> {
+                inputMat.copyTo(processedMat)
+                Core.bitwise_not(processedMat, processedMat)
+            }
+        }
+
         return processedMat
     }
 }

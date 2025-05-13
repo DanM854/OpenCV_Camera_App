@@ -1,3 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">OpenCV_Camera_App</string>
+    <string name="app_name">OpenCV Camera App</string>
+
+    <!-- Opciones de filtro para el Spinner -->
+    <string-array name="filter_options">
+        <item>Original</item>
+        <item>Umbral Adaptativo</item>
+        <item>Negativo</item>
+    </string-array>
 </resources>
